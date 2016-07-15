@@ -6,6 +6,48 @@ local modname = "winter_is_coming"
 
 
 
+minetest.register_node(modname..":frozen_tree_base", {
+	description = "Frozen Tree",
+	tiles = {
+		"default_tree_top.png^"..modname.."_trunkfrost.png", 
+		"default_tree_top.png^"..modname.."_trunkfrost.png", 
+		"default_tree.png^"..modname.."_treefrost.png"},
+	paramtype2 = "facedir",
+	is_ground_content = false,
+	drop = modname..':frozen_tree 1',
+	groups = {tree = 1, choppy = 3, oddly_breakable_by_hand = 2},
+	sounds = default.node_sound_wood_defaults(),
+
+	on_place = minetest.rotate_node
+})
+
+minetest.register_node(modname..":frozen_tree", {
+	description = "Frozen Tree",
+	tiles = {
+		"default_tree_top.png^"..modname.."_trunkfrost.png", 
+		"default_tree_top.png^"..modname.."_trunkfrost.png", 
+		"default_tree.png^"..modname.."_trunkfrost.png"},
+	paramtype2 = "facedir",
+	is_ground_content = false,
+	groups = {tree = 1, choppy = 3, oddly_breakable_by_hand = 2},
+	sounds = default.node_sound_wood_defaults(),
+
+	on_place = minetest.rotate_node
+})
+
+
+minetest.register_node(modname..":dead_twigs", {
+	description = "Dead Twigs",
+	drawtype = "allfaces_optional",
+	visual_scale = 1.3,
+	tiles = {modname.."_deadtwigs.png"},
+	special_tiles = {modname.."_deadtwigs.png"},
+	paramtype = "light",
+	is_ground_content = false,
+	groups = {snappy = 3, flammable = 1, leaves = 1}
+})
+
+
 minetest.register_abm({
 	nodenames = { "default:snow" },
 	interval = 1,
@@ -27,8 +69,54 @@ minetest.register_abm({
 		
 		if minetest.get_item_group(q.name, "flora") > 0 then 
 			minetest.set_node(n, {name="default:dry_shrub"})
+			return
 		end
 		
+		if q.name == "default:tree" then 
+			n.y = n.y + 1
+			local r = minetest.get_node(n)
+			if r.name == "default:tree" then
+				minetest.set_node(q.pos, {name=modname..":frozen_tree_base"})
+				return
+			end
+		end
+		
+	end,
+})
+
+minetest.register_abm({
+	nodenames = { "default:snow"},
+	interval = 1,
+	chance = 5,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		local n = minetest.find_node_near(pos, 1, {"default:tree"})
+		if n ~= nil then
+			minetest.set_node(n, {name=modname..":frozen_tree"})
+		end
+	end,
+})
+
+minetest.register_abm({
+	nodenames = { modname..":frozen_tree_base", modname..":frozen_tree"},
+	interval = 1,
+	chance = 10,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		local n = minetest.find_node_near(pos, 1, {"default:tree"})
+		if n ~= nil then
+			minetest.set_node(n, {name=modname..":frozen_tree"})
+		end
+	end,
+})
+
+minetest.register_abm({
+	nodenames = { modname..":frozen_tree_base", modname..":frozen_tree", modname..":dead_twigs"},
+	interval = 1,
+	chance = 10,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		local n = minetest.find_node_near(pos, 1, {"default:leaves"})
+		if n ~= nil then
+			minetest.set_node(n, {name=modname..":dead_twigs"})
+		end
 	end,
 })
 
