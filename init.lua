@@ -44,6 +44,7 @@ minetest.register_node(modname..":dead_twigs", {
 	tiles = {modname.."_deadtwigs.png"},
 	special_tiles = {modname.."_deadtwigs.png"},
 	paramtype = "light",
+	drop="default:stick 1",
 	is_ground_content = false,
 	groups = {snappy = 3, flammable = 1, leaves = 1, frost=1}
 })
@@ -77,9 +78,65 @@ minetest.register_node(modname..":dirt_with_dry_snow", {
 	}),
 })
 
+winter_is_coming.check_waving_snow = function(pos) 
+		
+		local myname = minetest.get_node(pos).name
+		pos.y = pos.y - 1
+		local uname = minetest.get_node(pos).name
+		local nodedef = minetest.registered_nodes[uname]
+		pos.y = pos.y + 1
+			
+		if nodedef ~= nil and nodedef.waving ~= nil then
+			-- it's waving, we should too
+			if myname == "default:snow" then
+				minetest.set_node(pos, {name = modname..":waving_snow"})
+			end
+		elseif myname == modname..":waving_snow" then
+			minetest.set_node(pos, {name = "default:snow"})
+		end
+
+end
+
+-- waiting on engine support for nodeboxed drawtypes. in the mean time large waving snow is better than thin floating snow
+minetest.register_node(modname..":waving_snow", {
+	description = "Snow",
+	tiles = {"default_snow.png"},
+	waving = 1,
+	inventory_image = "default_snowball.png",
+	wield_image = "default_snowball.png",
+	paramtype = "light",
+	buildable_to = true,
+	drawtype = "allfaces_optional",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.5, 0.5, -0.25, 0.5},
+		},
+	},
+	groups = {crumbly = 3, falling_node = 1, puts_out_fire = 1},
+	sounds = default.node_sound_dirt_defaults({
+		footstep = {name = "default_snow_footstep", gain = 0.15},
+		dug = {name = "default_snow_footstep", gain = 0.2},
+		dig = {name = "default_snow_footstep", gain = 0.2}
+	}),
+	drops="default:snow",
+
+	on_construct = winter_is_coming.check_waving_snow,
+})
+
+
+minetest.register_abm({
+	nodenames = { "default:snow"},
+	neighbors = { "group:leaves" },
+	interval = 1,
+	chance = 5,
+	action = winter_is_coming.check_waving_snow,
+})
+
 local freeze_pairs = {
 	["default:dirt"] = modname..":permafrost",
 	["default:dirt_with_grass"] = "default:dirt_with_snow",
+	["default:dirt_with_grass_footsteps"] = "default:dirt_with_snow",
 	["default:dirt_with_dry_grass"] = modname..":dirt_with_dry_snow",
 	["default:tree"] = modname..":frozen_tree",
 	["default:water_source"] = "default:ice",
@@ -180,6 +237,35 @@ minetest.register_abm({
 		
 	end,
 })
+
+
+-- snow accumulation on parts of nature
+minetest.register_abm({
+	nodenames = {"group:tree", "group:leaves" },
+	neighbors = {"air"},
+	interval = 2,
+	chance = 20,
+	catch_up = false,
+	action = function(pos, node)
+		local above = {x = pos.x, y = pos.y + 1, z = pos.z}
+		local a = minetest.get_node(above)
+		
+		if a.name ~= "air" then
+			return
+		end
+		
+		-- make sure some snow or ice is nearby
+		local n = minetest.find_node_near(pos, 6, 
+			{"default:snow", "default:snowblock", "default:ice", modname..":waving_snow", modname..":river_ice"})
+		if n == nil then
+			return
+		end
+		
+		
+		minetest.set_node(above, {name = "default:snow"})
+	end
+})
+
 
 --[[
 minetest.register_abm({
