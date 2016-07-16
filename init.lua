@@ -19,7 +19,7 @@ minetest.register_node(modname..":frozen_tree_base", {
 	groups = {tree = 1, choppy = 3, oddly_breakable_by_hand = 2, frost=2},
 	sounds = default.node_sound_wood_defaults(),
 
-	on_place = minetest.rotate_node
+	--on_place = minetest.rotate_node
 })
 
 minetest.register_node(modname..":frozen_tree", {
@@ -33,7 +33,7 @@ minetest.register_node(modname..":frozen_tree", {
 	groups = {tree = 1, choppy = 3, oddly_breakable_by_hand = 2, frost=2},
 	sounds = default.node_sound_wood_defaults(),
 
-	on_place = minetest.rotate_node
+	--on_place = minetest.rotate_node
 })
 
 
@@ -128,8 +128,14 @@ winter_is_coming.init = function()
 				end
 			end
 			
-			minetest.set_node(pos, {name=frozen_name})
-
+			-- fix rotation of logs
+			local nodedef = minetest.registered_nodes[node.name]
+			
+			if nodedef ~= nil and nodedef.paramtype2 == "facedir" then
+				minetest.set_node(pos, {name=frozen_name, param2 = node.param2})
+			else
+				minetest.set_node(pos, {name=frozen_name})
+			end
 			
 		end,
 	})
@@ -167,7 +173,7 @@ minetest.register_abm({
 			n.y = n.y + 1
 			local r = minetest.get_node(n)
 			if r.name == "default:tree" then
-				minetest.set_node(q.pos, {name=modname..":frozen_tree_base"})
+				minetest.set_node(q.pos, {name=modname..":frozen_tree_base", param2=q.param2})
 				return
 			end
 		end
@@ -188,7 +194,7 @@ minetest.register_abm({
 	end,
 })
 ]]
-
+--[[
 -- trees grow frost
 minetest.register_abm({
 	nodenames = { modname..":frozen_tree_base", modname..":frozen_tree"},
@@ -197,7 +203,7 @@ minetest.register_abm({
 	action = function(pos, node, active_object_count, active_object_count_wider)
 		local n = minetest.find_node_near(pos, 1, {"default:tree"})
 		if n ~= nil then
-			minetest.set_node(n, {name=modname..":frozen_tree"})
+			minetest.set_node(n, {name=modname..":frozen_tree", param2=node.param2})
 		end
 	end,
 })
@@ -214,7 +220,7 @@ minetest.register_abm({
 		end
 	end,
 })
-
+]]
 -- snow piles up
 minetest.register_abm({
 	nodenames = { "default:dirt_with_snow" },
