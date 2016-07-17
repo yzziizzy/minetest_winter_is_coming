@@ -49,6 +49,18 @@ minetest.register_node(modname..":dead_twigs", {
 	groups = {snappy = 3, flammable = 1, leaves = 1, frost=1}
 })
 
+minetest.register_node(modname..":dead_twigs_snowy", {
+	description = "Dead Twigs",
+	drawtype = "allfaces_optional",
+	visual_scale = 1.3,
+	tiles = {modname.."_deadtwigs_snowy.png"},
+	special_tiles = {modname.."_deadtwigs_snowy.png"},
+	paramtype = "light",
+	drop="default:stick 1",
+	is_ground_content = false,
+	groups = {snappy = 3, flammable = 1, leaves = 1, frost=1}
+})
+
 minetest.register_node(modname..":permafrost", {
 	description = "Permafrost",
 	tiles = {"default_dirt.png^"..modname.."_trunkfrost.png"},
@@ -199,6 +211,8 @@ winter_is_coming.init = function()
 	
 end
 
+-- fix stupid default game political decisions
+minetest.registered_nodes["default:snow"].node_box.type = "leveled"
 
 winter_is_coming.init()
 
@@ -240,6 +254,7 @@ minetest.register_abm({
 
 
 -- snow accumulation on parts of nature
+--[[ very broken atm, works far too well
 minetest.register_abm({
 	nodenames = {"group:tree", "group:leaves" },
 	neighbors = {"air"},
@@ -265,7 +280,7 @@ minetest.register_abm({
 		minetest.set_node(above, {name = "default:snow"})
 	end
 })
-
+]]
 
 --[[
 minetest.register_abm({
@@ -321,5 +336,15 @@ minetest.register_abm({
 				minetest.set_node(n, {name="default:snow"})
 			end
 		end
+	end,
+})
+
+-- twigs get snowy
+minetest.register_abm({
+	nodenames = { modname..":dead_twigs" },
+	interval = 10,
+	chance = 50,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		minetest.set_node(pos, {name=modname..":dead_twigs_snowy"})
 	end,
 })
