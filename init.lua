@@ -180,6 +180,10 @@ winter_is_coming.init = function()
 				return
 			end
 			
+			-- don't freeze near furnaces
+			if nil ~= minetest.find_node_near(pos, 4, {"default:furnace"}) then
+				return
+			end
 			
 			local n = {x=pos.x, y=pos.y, z=pos.z}
 			n.y = n.y + 1
@@ -225,6 +229,13 @@ minetest.register_abm({
 		if n == nil then
 			return
 		end
+		
+					
+		-- don't freeze near furnaces
+		if nil ~= minetest.find_node_near(pos, 4, {"default:furnace"}) then
+			return
+		end
+			
 		
 		minetest.set_node(n, {name="default:dirt_with_snow"})
 		
