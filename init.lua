@@ -232,10 +232,9 @@ minetest.register_abm({
 		
 					
 		-- don't freeze near furnaces
-		if nil ~= minetest.find_node_near(pos, 4, {"default:furnace"}) then
+		if nil ~= minetest.find_node_near(n, 4, {"default:furnace_active"}) then
 			return
 		end
-			
 		
 		minetest.set_node(n, {name="default:dirt_with_snow"})
 		
@@ -342,6 +341,12 @@ minetest.register_abm({
 		local n = minetest.find_node_near(pos, 1, {"default:dirt_with_snow"})
 		if n ~= nil then
 			n.y = n.y + 1
+			
+			-- don't freeze near torches
+			if nil ~= minetest.find_node_near(n, 1, {"default:torch"}) then
+				return
+			end
+			
 			local q = minetest.get_node(n)
 			if q ~= nil and (q.name == "air" or q.name == "default:grass") then 
 				minetest.set_node(n, {name="default:snow"})
