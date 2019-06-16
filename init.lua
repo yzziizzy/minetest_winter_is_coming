@@ -219,7 +219,7 @@ end
 minetest.registered_nodes["default:snow"].node_box.type = "leveled"
 
 winter_is_coming.init()
-
+--[[
 minetest.register_abm({
 	nodenames = { "default:snow" },
 	interval = 1,
@@ -261,7 +261,7 @@ minetest.register_abm({
 		
 	end,
 })
-
+]]
 
 -- snow accumulation on parts of nature
 --[[ very broken atm, works far too well
@@ -335,8 +335,9 @@ minetest.register_abm({
 -- snow piles up
 minetest.register_abm({
 	nodenames = { "default:dirt_with_snow" },
-	interval = 1,
-	chance = 10,
+	neighbors = { "air" },
+	interval = 5,
+	chance = 5,
 	action = function(pos, node, active_object_count, active_object_count_wider)
 		local n = minetest.find_node_near(pos, 1, {"default:dirt_with_snow"})
 		if n ~= nil then
@@ -351,6 +352,48 @@ minetest.register_abm({
 			if q ~= nil and (q.name == "air" or q.name == "default:grass") then 
 				minetest.set_node(n, {name="default:snow"})
 			end
+		end
+	end,
+})
+
+-- snowy grass spreads
+minetest.register_abm({
+	nodenames = { "default:dirt_with_snow" },
+	neighbors = { "default:dirt_with_grass", "default:dirt_with_rainforest_litter", "default:dirt_with_dry_grass" },
+	interval = 5,
+	chance = 5,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		local n = minetest.find_node_near(pos, 1, {"default:dirt_with_grass", "default:dirt_with_rainforest_litter", "default:dirt_with_dry_grass"})
+		if n ~= nil then
+			
+			-- don't freeze near torches
+			if nil ~= minetest.find_node_near(n, 3, {"default:torch"}) then
+				return
+			end
+			
+			minetest.set_node(n, {name="default:dirt_with_snow"})
+			
+			n.y = n.y + 1
+			local q = minetest.get_node(n)
+			
+			if q == nil then 
+				return
+			end
+			
+			if minetest.get_item_group(q.name, "flora") > 0 then 
+				minetest.set_node(n, {name="default:dry_shrub"})
+				return
+			end
+			
+			if q.name == "default:tree" then 
+				n.y = n.y + 1
+				local r = minetest.get_node(n)
+				if r.name == "default:tree" then
+					minetest.set_node(q.pos, {name=modname..":frozen_tree_base", param2=q.param2})
+					return
+				end
+			end
+
 		end
 	end,
 })
